@@ -1,6 +1,20 @@
 #include <Arduino.h>
 #include <softSerial.h>
 #include <TinyGPS++.h>
+#include <LoRaWanMinimal_APP.h>
+
+/* OTAA para*/
+uint8_t devEui[] = {0x22, 0x32, 0x33, 0x00, 0x00, 0x88, 0x88, 0x02};
+uint8_t appEui[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+uint8_t appKey[] = {0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x66, 0x01};
+
+/* ABP para*/
+uint8_t nwkSKey[] = {0xF9, 0x94, 0xFB, 0x81, 0x0C, 0xE9, 0x53, 0x55, 0xE3, 0xB3, 0xEC, 0x30, 0xAF, 0x92, 0xB0, 0xF9};
+uint8_t appSKey[] = {0xF0, 0x47, 0xFD, 0x33, 0xFD, 0x99, 0x45, 0x88, 0x6C, 0xE5, 0xE4, 0x09, 0x49, 0xA4, 0x51, 0x56};
+uint32_t devAddr = (uint32_t)0x260B46AE;
+
+/*LoraWan channelsmask, default channels 0-7*/
+uint16_t userChannelsMask[6] = {0x00FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
 
 static constexpr uint8_t VEXT_PIN = GPIO6;
 static constexpr uint8_t GPS_RX_PIN = GPIO0;
@@ -59,16 +73,18 @@ void printDouble(double value, uint8_t decimalPlaces)
 
 void setup()
 {
-  boardInitMcu();
   ss.begin(SW_SERIAL_BAUDRATE);
   Serial.begin(HW_SERIAL_BAUDRATE);
   Serial.print("\nLoRa versatile node by SP6HFE\n");
   digitalWrite(VEXT_PIN, 0);
+
+  LoRaWAN.begin(DeviceClass_t::CLASS_A, LoRaMacRegion_t::LORAMAC_REGION_EU868);
+  LoRaWAN.joinABP(nwkSKey, appSKey, devAddr);
 }
 
 void loop()
 {
-  static constexpr uint32_t MIN_READOUT_UPDATE_MS = 5000;
+  static constexpr uint32_t MIN_READOUT_UPDATE_MS = 10000;
   static uint32_t lastUpdate = 0;
   static uint32_t lastSentencesWithFixCount = 0;
 
@@ -109,6 +125,9 @@ void loop()
       printDouble(gps.hdop.hdop(), 2);
       Serial.println();
       lastUpdate = currentTime;
+
+      uint8_t payload[4] = {'A', 'B', 'C', 'D'};
+      LoRaWAN.send(sizeof(payload), payload, 1, false);
     }
   }
 }

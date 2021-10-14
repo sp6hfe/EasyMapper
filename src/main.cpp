@@ -2,6 +2,7 @@
 #include <softSerial.h>
 #include <TinyGPS++.h>
 #include <LoRaWanMinimal_APP.h>
+#include <CubeCell_NeoPixel.h>
 
 /* OTAA para*/
 uint8_t devEui[] = {0x22, 0x32, 0x33, 0x00, 0x00, 0x88, 0x88, 0x02};
@@ -16,6 +17,11 @@ uint32_t devAddr = (uint32_t)0x260B46AE;
 /*LoraWan channelsmask, default channels 0-7*/
 uint16_t userChannelsMask[6] = {0x00FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
 
+static constexpr uint32_t LED_OFF = 0x00000000;
+static constexpr uint32_t LED_RED = 0x00FF0000;
+static constexpr uint32_t LED_GREEN = 0x0000FF00;
+static constexpr uint32_t LED_BLUE = 0x000000FF;
+
 static constexpr uint8_t VEXT_PIN = GPIO6;
 static constexpr uint8_t GPS_RX_PIN = GPIO0;
 static constexpr uint8_t GPS_TX_PIN = GPIO5;
@@ -24,6 +30,7 @@ static constexpr uint32_t HW_SERIAL_BAUDRATE = 115200;
 
 softSerial ss(GPS_TX_PIN, GPS_RX_PIN);
 TinyGPSPlus gps;
+CubeCell_NeoPixel led(1, RGB, NEO_GRB + NEO_KHZ800);
 
 void printDouble(double value, uint8_t decimalPlaces)
 {
@@ -71,15 +78,53 @@ void printDouble(double value, uint8_t decimalPlaces)
   }
 }
 
+void enableExtPower(bool enable)
+{
+  if (enable)
+  {
+    digitalWrite(VEXT_PIN, 0);
+    delay(1);
+  }
+  else
+  {
+    digitalWrite(VEXT_PIN, 1);
+  }
+}
+
+void ledInit(CubeCell_NeoPixel *led)
+{
+  if (led)
+  {
+    led->begin();
+    led->clear();
+    led->setBrightness(10);
+  }
+}
+
+void ledSetColor(CubeCell_NeoPixel *led, uint32_t color)
+{
+  if (led)
+  {
+    uint8_t red = (uint8_t)(color >> 16);
+    uint8_t green = (uint8_t)(color >> 8);
+    uint8_t blue = (uint8_t)color;
+    led->setPixelColor(0, led->Color(red, green, blue));
+    led->show();
+  }
+}
+
 void setup()
 {
+  enableExtPower(true);
+  ledInit(&led);
+  ledSetColor(&led, LED_BLUE);
   ss.begin(SW_SERIAL_BAUDRATE);
   Serial.begin(HW_SERIAL_BAUDRATE);
   Serial.print("\nLoRa versatile node by SP6HFE\n");
-  digitalWrite(VEXT_PIN, 0);
 
   LoRaWAN.begin(DeviceClass_t::CLASS_A, LoRaMacRegion_t::LORAMAC_REGION_EU868);
   LoRaWAN.joinABP(nwkSKey, appSKey, devAddr);
+  ledSetColor(&led, LED_OFF);
 }
 
 void loop()
@@ -127,7 +172,9 @@ void loop()
       lastUpdate = currentTime;
 
       uint8_t payload[4] = {'A', 'B', 'C', 'D'};
+      ledSetColor(&led, LED_GREEN);
       LoRaWAN.send(sizeof(payload), payload, 1, false);
+      ledSetColor(&led, LED_OFF);
     }
   }
 }

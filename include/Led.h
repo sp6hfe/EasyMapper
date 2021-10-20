@@ -9,7 +9,7 @@ class Led : public ILed {
 private:
   static constexpr uint32_t LED_OFF = 0x00000000;
 
-  CubeCell_NeoPixel &led;
+  CubeCell_NeoPixel led = CubeCell_NeoPixel(1, RGB, NEO_GRB + NEO_KHZ800);
   uint32_t lastColor = 0;
 
 public:
@@ -18,7 +18,7 @@ public:
   void setColor(uint32_t color) override;
   void setBrightness(uint8_t level) override;
 
-  Led(CubeCell_NeoPixel &led_) : led(led_) {
+  Led() {
     this->led.begin();
     this->led.clear();
     this->led.setBrightness(10);

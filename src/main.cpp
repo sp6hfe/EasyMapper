@@ -22,8 +22,7 @@ static constexpr uint32_t EE_SIZE = 8;
 softSerial ss(GPS_TX_PIN, GPS_RX_PIN);
 TinyGPSPlus gps;
 
-CubeCell_NeoPixel _led(1, RGB, NEO_GRB + NEO_KHZ800);
-wrappers::Led led(_led);
+wrappers::Led led;
 
 uint8_t payload[PAYLOAD_SIZE];
 

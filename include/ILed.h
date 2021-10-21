@@ -10,6 +10,6 @@ public:
 
   virtual void on() = 0;
   virtual void off() = 0;
-  virtual void setColor(uint32_t color) = 0;
-  virtual void setBrightness(uint8_t level) = 0;
+  virtual void setColor(const uint32_t color) = 0;
+  virtual void setBrightness(const uint8_t level) = 0;
 };

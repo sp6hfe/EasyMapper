@@ -15,8 +15,8 @@ private:
 public:
   void on() override;
   void off() override;
-  void setColor(uint32_t color) override;
-  void setBrightness(uint8_t level) override;
+  void setColor(const uint32_t color) override;
+  void setBrightness(const uint8_t level) override;
 
   Led() {
     this->led.begin();

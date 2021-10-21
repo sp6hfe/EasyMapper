@@ -1,14 +1,16 @@
 #include "Application.h"
 #include "HwSerial.h"
 #include "Led.h"
+#include "LoRaWanMod.h"
 #include "SwSerial.h"
 #include "secrets.hpp"
 #include <Arduino.h>
 #include <CubeCell_NeoPixel.h>
-#include <LoRaWanMinimal_APP.h>
 #include <TinyGPS++.h>
 #include <softSerial.h>
 
+
+// TODO: move it to the wrapper
 /*LoraWan channelsmask, default channels 0-7*/
 uint16_t userChannelsMask[6] = {0x00FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
 
@@ -130,6 +132,7 @@ void preparePayload(const dataToSend_t &data,
   payload[index] = gpsHdopBinary & 0xFF;
 }
 
+extern LoRaWanMod LoRaWanModified;
 wrappers::Led led;
 wrappers::HwSerial *console;
 wrappers::SwSerial *gpsLink;
@@ -152,8 +155,9 @@ void setup() {
   application->setup();
 
   // things to move inside the app
-  LoRaWAN.begin(DeviceClass_t::CLASS_A, LoRaMacRegion_t::LORAMAC_REGION_EU868);
-  LoRaWAN.joinABP(nwkSKey, appSKey, devAddr);
+  LoRaWanModified.begin(DeviceClass_t::CLASS_A,
+                        LoRaMacRegion_t::LORAMAC_REGION_EU868);
+  LoRaWanModified.joinABP(nwkSKey, appSKey, devAddr);
 
   // TODO: remove when app will handle that
   led.off();
@@ -213,7 +217,7 @@ void loop() {
         led.setColor(ILed::LED_GREEN);
         led.on();
         preparePayload(dataToSend, payload);
-        LoRaWAN.send(sizeof(payload), payload, 1, false);
+        LoRaWanModified.send(sizeof(payload), payload, 1, false);
         led.off();
       }
 

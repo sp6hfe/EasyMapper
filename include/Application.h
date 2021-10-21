@@ -1,18 +1,20 @@
 #pragma once
 
 #include "ILed.h"
+#include "Stream.h"
 
 namespace app {
 
 class App {
 private:
   ILed &led;
+  Stream *console;
 
 public:
-  void init();
-  void run();
+  void setup();
+  void loop();
 
-  App(ILed &led_) : led(led_){};
+  App(Stream *console_, ILed &led_) : console(console_), led(led_){};
 };
 
 } // namespace app

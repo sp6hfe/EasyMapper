@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "HwSerial.h"
 #include "Led.h"
 #include "secrets.hpp"
 #include <Arduino.h>
@@ -21,12 +22,7 @@ static constexpr uint32_t EE_SIZE = 8;
 
 softSerial ss(GPS_TX_PIN, GPS_RX_PIN);
 TinyGPSPlus gps;
-
-wrappers::Led led;
-
 uint8_t payload[PAYLOAD_SIZE];
-
-app::App _app(led);
 
 void printDouble(double value, uint8_t decimalPlaces) {
   // print integer part
@@ -133,13 +129,25 @@ void preparePayload(const dataToSend_t &data,
   payload[index] = gpsHdopBinary & 0xFF;
 }
 
+wrappers::Led led;
+wrappers::HwSerial *console;
+app::App *application;
+
 void setup() {
+  // external devices power on
   enableExtPower(true);
 
-  _app.init();
-
+  // Arduino-created objects setup
   Serial.begin(HW_SERIAL_BAUDRATE);
-  Serial.print("\nLoRa EasyMapper by SP6HFE\n");
+
+  // wrappers setup
+  console = new wrappers::HwSerial(Serial);
+
+  // app setup
+  application = new app::App(console, led);
+  application->setup();
+
+  // things to move inside the app
   ss.begin(SW_SERIAL_BAUDRATE);
 
   LoRaWAN.begin(DeviceClass_t::CLASS_A, LoRaMacRegion_t::LORAMAC_REGION_EU868);
@@ -212,5 +220,5 @@ void loop() {
     }
   }
 
-  _app.run();
+  application->loop();
 }

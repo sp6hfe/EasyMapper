@@ -2,8 +2,11 @@
 
 namespace app {
 
-void App::init() { this->led.setColor(ILed::LED_BLUE); }
+void App::setup() {
+  this->led.setColor(ILed::LED_BLUE);
+  this->console->print("\nLoRa EasyMapper by SP6HFE\n");
+}
 
-void App::run() {}
+void App::loop() {}
 
 } // namespace app

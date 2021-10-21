@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "HwSerial.h"
 #include "Led.h"
+#include "SwSerial.h"
 #include "secrets.hpp"
 #include <Arduino.h>
 #include <CubeCell_NeoPixel.h>
@@ -20,7 +21,7 @@ static constexpr uint32_t HW_SERIAL_BAUDRATE = 115200;
 static constexpr uint8_t PAYLOAD_SIZE = 11;
 static constexpr uint32_t EE_SIZE = 8;
 
-softSerial ss(GPS_TX_PIN, GPS_RX_PIN);
+softSerial softwareSerial(GPS_TX_PIN, GPS_RX_PIN);
 TinyGPSPlus gps;
 uint8_t payload[PAYLOAD_SIZE];
 
@@ -131,25 +132,26 @@ void preparePayload(const dataToSend_t &data,
 
 wrappers::Led led;
 wrappers::HwSerial *console;
+wrappers::SwSerial *gpsLink;
 app::App *application;
 
 void setup() {
   // external devices power on
   enableExtPower(true);
 
-  // Arduino-created objects setup
+  // objects requiring setup
   Serial.begin(HW_SERIAL_BAUDRATE);
+  softwareSerial.begin(SW_SERIAL_BAUDRATE);
 
   // wrappers setup
   console = new wrappers::HwSerial(Serial);
+  gpsLink = new wrappers::SwSerial(softwareSerial);
 
   // app setup
-  application = new app::App(console, led);
+  application = new app::App(console, gpsLink, led);
   application->setup();
 
   // things to move inside the app
-  ss.begin(SW_SERIAL_BAUDRATE);
-
   LoRaWAN.begin(DeviceClass_t::CLASS_A, LoRaMacRegion_t::LORAMAC_REGION_EU868);
   LoRaWAN.joinABP(nwkSKey, appSKey, devAddr);
 
@@ -162,7 +164,7 @@ void loop() {
   static uint32_t lastUpdate = 0;
   static uint32_t lastSentencesWithFixCount = 0;
 
-  int gps_data = ss.read();
+  int gps_data = softwareSerial.read();
   if (gps_data >= 0) {
     gps.encode(static_cast<uint8_t>(gps_data));
   }

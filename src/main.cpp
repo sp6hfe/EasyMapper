@@ -1,24 +1,18 @@
 #include "Application.h"
 #include "HwSerial.h"
 #include "Led.h"
-#include "LoRaWanMod.h"
+#include "LoRaWan.h"
 #include "SwSerial.h"
-#include "secrets.hpp"
 #include <Arduino.h>
 #include <CubeCell_NeoPixel.h>
 #include <TinyGPS++.h>
 #include <softSerial.h>
 
-
-// TODO: move it to the wrapper
-/*LoraWan channelsmask, default channels 0-7*/
-uint16_t userChannelsMask[6] = {0x00FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
-
 static constexpr uint8_t VEXT_PIN = GPIO6;
 static constexpr uint8_t GPS_RX_PIN = GPIO0;
 static constexpr uint8_t GPS_TX_PIN = GPIO5;
-static constexpr uint16_t SW_SERIAL_BAUDRATE = 9600;
-static constexpr uint32_t HW_SERIAL_BAUDRATE = 115200;
+static constexpr uint16_t GPS_BAUDRATE = 9600;
+static constexpr uint32_t CONSOLE_BAUDRATE = 115200;
 
 static constexpr uint8_t PAYLOAD_SIZE = 11;
 static constexpr uint32_t EE_SIZE = 8;
@@ -132,10 +126,11 @@ void preparePayload(const dataToSend_t &data,
   payload[index] = gpsHdopBinary & 0xFF;
 }
 
-extern LoRaWanMod LoRaWanModified;
+// extern LoRaWanMod LoRaWanModified;
 wrappers::Led led;
 wrappers::HwSerial *console;
 wrappers::SwSerial *gpsLink;
+wrappers::LoRaWan *lora;
 app::App *application;
 
 void setup() {
@@ -143,24 +138,18 @@ void setup() {
   enableExtPower(true);
 
   // objects requiring setup
-  Serial.begin(HW_SERIAL_BAUDRATE);
-  softwareSerial.begin(SW_SERIAL_BAUDRATE);
+  Serial.begin(CONSOLE_BAUDRATE);
+  softwareSerial.begin(GPS_BAUDRATE);
 
-  // wrappers setup
+  // wrappers setup (using already available Arduino-instantiated objects)
   console = new wrappers::HwSerial(Serial);
   gpsLink = new wrappers::SwSerial(softwareSerial);
+  lora = new wrappers::LoRaWan(DeviceClass_t::CLASS_A,
+                               LoRaMacRegion_t::LORAMAC_REGION_EU868);
 
   // app setup
-  application = new app::App(console, gpsLink, led);
+  application = new app::App(console, gpsLink, lora, led);
   application->setup();
-
-  // things to move inside the app
-  LoRaWanModified.begin(DeviceClass_t::CLASS_A,
-                        LoRaMacRegion_t::LORAMAC_REGION_EU868);
-  LoRaWanModified.joinABP(nwkSKey, appSKey, devAddr);
-
-  // TODO: remove when app will handle that
-  led.off();
 }
 
 void loop() {
@@ -214,11 +203,8 @@ void loop() {
 
       // air data
       if (dataOkToSend) {
-        led.setColor(ILed::LED_GREEN);
-        led.on();
         preparePayload(dataToSend, payload);
-        LoRaWanModified.send(sizeof(payload), payload, 1, false);
-        led.off();
+        application->sendLoRaWanData(sizeof(payload), payload, 1, false);
       }
 
       // keep updates interval

@@ -11,6 +11,11 @@ void App::setup() {
   this->console->print("\t*****************************\n");
   this->console->print("\nJoining with ABP...\n");
   this->lora->joinABP(secrets::nwkSKey, secrets::appSKey, secrets::devAddr);
+  if (this->lora->isJoined()) {
+    this->console->print("Joined\n");
+  } else {
+    this->console->print("Join failed\n");
+  }
   this->led.off();
 }
 

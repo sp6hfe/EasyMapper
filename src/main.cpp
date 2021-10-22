@@ -21,9 +21,15 @@ softSerial softwareSerial(GPS_TX_PIN, GPS_RX_PIN);
 TinyGPSPlus gps;
 uint8_t payload[PAYLOAD_SIZE];
 
+wrappers::Led led;
+wrappers::HwSerial *console;
+wrappers::SwSerial *gpsLink;
+wrappers::LoRaWan *lora;
+app::App *application;
+
 void printDouble(double value, uint8_t decimalPlaces) {
   // print integer part
-  Serial.print(int(value));
+  console->print(int(value));
 
   // calculate fractional part
   if (decimalPlaces > 0) {
@@ -51,11 +57,11 @@ void printDouble(double value, uint8_t decimalPlaces) {
     }
 
     // print fractional part
-    Serial.print('.');
+    console->print('.');
     while (zeroPaddingCounter--) {
-      Serial.print('0');
+      console->print('0');
     }
-    Serial.printf("%d", frac);
+    console->printf("%d", frac);
   }
 }
 
@@ -126,13 +132,6 @@ void preparePayload(const dataToSend_t &data,
   payload[index] = gpsHdopBinary & 0xFF;
 }
 
-// extern LoRaWanMod LoRaWanModified;
-wrappers::Led led;
-wrappers::HwSerial *console;
-wrappers::SwSerial *gpsLink;
-wrappers::LoRaWan *lora;
-app::App *application;
-
 void setup() {
   // external devices power on
   enableExtPower(true);
@@ -157,7 +156,7 @@ void loop() {
   static uint32_t lastUpdate = 0;
   static uint32_t lastSentencesWithFixCount = 0;
 
-  int gps_data = softwareSerial.read();
+  int gps_data = gpsLink->read();
   if (gps_data >= 0) {
     gps.encode(static_cast<uint8_t>(gps_data));
   }
@@ -183,23 +182,23 @@ void loop() {
       }
 
       // print report
-      Serial.printf("%02d.%02d.%d %02d:%02d:%02d ", gps.date.day(),
-                    gps.date.month(), gps.date.year(), gps.time.hour(),
-                    gps.time.minute(), gps.time.second());
+      console->printf("%02d.%02d.%d %02d:%02d:%02d ", gps.date.day(),
+                      gps.date.month(), gps.date.year(), gps.time.hour(),
+                      gps.time.minute(), gps.time.second());
       if (dataOkToSend) {
-        Serial.print("[+]");
+        console->print("[+]");
       } else {
-        Serial.print("[-]");
+        console->print("[-]");
       }
-      Serial.print(" Lat: ");
+      console->print(" Lat: ");
       printDouble(dataToSend.gpsLatitude, 6);
-      Serial.print(", Lon: ");
+      console->print(", Lon: ");
       printDouble(dataToSend.gpsLongtitude, 6);
-      Serial.print(", Alt: ");
+      console->print(", Alt: ");
       printDouble(dataToSend.gpsAltitude, 1);
-      Serial.print(", HDOP: ");
+      console->print(", HDOP: ");
       printDouble(dataToSend.gpsHdop, 1);
-      Serial.println();
+      console->println();
 
       // air data
       if (dataOkToSend) {

@@ -13,13 +13,14 @@ void App::setup() {
   this->lora->joinABP(secrets::nwkSKey, secrets::appSKey, secrets::devAddr);
   if (this->lora->isJoined()) {
     this->console->print("Joined\n");
+    this->led.off();
   } else {
     this->console->print("Join failed\n");
+    this->led.setColor(ILed::LED_RED);
   }
-  this->led.off();
 }
 
-void App::loop() {}
+void App::loop(uint32_t loopEnterMillis) {}
 
 void App::sendLoRaWanData(size_t dataSize, uint8_t *data, uint8_t port,
                           bool ifConfirmed) {

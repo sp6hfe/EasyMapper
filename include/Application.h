@@ -15,7 +15,7 @@ private:
 
 public:
   void setup();
-  void loop();
+  void loop(uint32_t loopEnterMillis);
 
   // TODO: remove after integrated into loop()
   void sendLoRaWanData(size_t dataSize, uint8_t *data, uint8_t port,

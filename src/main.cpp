@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "Gps.h"
 #include "HwSerial.h"
 #include "Led.h"
 #include "LoRaWan.h"
@@ -12,14 +13,8 @@ static constexpr uint8_t GPS_RX_PIN = GPIO0;
 static constexpr uint8_t GPS_TX_PIN = GPIO5;
 static constexpr uint32_t CONSOLE_BAUDRATE = 115200;
 static constexpr uint16_t GPS_BAUDRATE = 9600;
-
 static constexpr uint32_t EE_SIZE = 8;
 
-softSerial softwareSerial(GPS_TX_PIN, GPS_RX_PIN);
-wrappers::Led led;
-wrappers::HwSerial *console;
-wrappers::SwSerial *gpsLink;
-wrappers::LoRaWan *lora;
 app::App *application;
 
 void enableExtPower(bool enable) {
@@ -32,22 +27,30 @@ void enableExtPower(bool enable) {
 }
 
 void setup() {
-  // external devices power on
+  // TODO: let it be handled by application
   enableExtPower(true);
-
-  // objects requiring setup
-  Serial.begin(CONSOLE_BAUDRATE);
-  softwareSerial.begin(GPS_BAUDRATE);
-
-  // wrappers setup (using already available Arduino-instantiated objects)
-  console = new wrappers::HwSerial(Serial);
-  gpsLink = new wrappers::SwSerial(softwareSerial);
-  lora = new wrappers::LoRaWan(DeviceClass_t::CLASS_A,
-                               LoRaMacRegion_t::LORAMAC_REGION_EU868);
-
-  // app setup
-  application = new app::App(console, gpsLink, lora, led);
-  application->setup();
 }
 
-void loop() { application->loop(millis()); }
+void loop() {
+  // TODO: figure if setup may be used for init
+  softSerial softwareSerial(GPS_TX_PIN, GPS_RX_PIN);
+  wrappers::HwSerial console;
+  wrappers::SwSerial gpsLink;
+  wrappers::Led led;
+  wrappers::Gps gps;
+  wrappers::LoRaWan lora(DeviceClass_t::CLASS_A,
+                         LoRaMacRegion_t::LORAMAC_REGION_EU868);
+
+  Serial.begin(CONSOLE_BAUDRATE);
+  console.begin(&Serial);
+  softwareSerial.begin(GPS_BAUDRATE);
+  gpsLink.begin(&softwareSerial);
+  gps.begin(&gpsLink);
+
+  app::App application(console, lora, gps, led);
+  application.setup();
+
+  while (1) {
+    application.loop(millis());
+  }
+}

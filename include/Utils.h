@@ -12,7 +12,7 @@ public:
   };
 
   static uint32_t toFixedPoint(ToFixedConversion_t type, double value);
-  static void printDouble(Stream *printer, double value, uint8_t decimalPlaces);
+  static void printDouble(Stream &printer, double value, uint8_t decimalPlaces);
 };
 
 uint32_t Numeric::toFixedPoint(Numeric::ToFixedConversion_t type,
@@ -42,44 +42,42 @@ uint32_t Numeric::toFixedPoint(Numeric::ToFixedConversion_t type,
   return fixedPointValue;
 }
 
-void Numeric::printDouble(Stream *printer, double value,
+void Numeric::printDouble(Stream &printer, double value,
                           uint8_t decimalPlaces) {
-  if (printer) {
-    // print integer part
-    printer->print(int(value));
+  // print integer part
+  printer.print(int(value));
 
-    // calculate fractional part
-    if (decimalPlaces > 0) {
-      // initial number of zeros if fractional part is really small
-      uint8_t zeroPaddingCounter = decimalPlaces - 1;
+  // calculate fractional part
+  if (decimalPlaces > 0) {
+    // initial number of zeros if fractional part is really small
+    uint8_t zeroPaddingCounter = decimalPlaces - 1;
 
-      // calculate multiplier allowing to extract decimal places
-      uint32_t precisionMultiplier = 1;
-      while (decimalPlaces--) {
-        precisionMultiplier *= 10;
-      }
-
-      // move fractional part to integers
-      uint32_t frac;
-      if (value >= 0) {
-        frac = (value - int(value)) * precisionMultiplier;
-      } else {
-        frac = (int(value) - value) * precisionMultiplier;
-      }
-
-      // calculate final 0-padding length
-      uint32_t fracTemp = frac;
-      while (fracTemp /= 10) {
-        zeroPaddingCounter--;
-      }
-
-      // print fractional part
-      printer->print('.');
-      while (zeroPaddingCounter--) {
-        printer->print('0');
-      }
-      printer->printf("%d", frac);
+    // calculate multiplier allowing to extract decimal places
+    uint32_t precisionMultiplier = 1;
+    while (decimalPlaces--) {
+      precisionMultiplier *= 10;
     }
+
+    // move fractional part to integers
+    uint32_t frac;
+    if (value >= 0) {
+      frac = (value - int(value)) * precisionMultiplier;
+    } else {
+      frac = (int(value) - value) * precisionMultiplier;
+    }
+
+    // calculate final 0-padding length
+    uint32_t fracTemp = frac;
+    while (fracTemp /= 10) {
+      zeroPaddingCounter--;
+    }
+
+    // print fractional part
+    printer.print('.');
+    while (zeroPaddingCounter--) {
+      printer.print('0');
+    }
+    printer.printf("%d", frac);
   }
 }
 

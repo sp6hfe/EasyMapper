@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "ExtPowerManager.h"
 #include "Gps.h"
 #include "HwSerial.h"
 #include "Led.h"
@@ -17,35 +18,28 @@ static constexpr uint32_t EE_SIZE = 8;
 
 app::App *application;
 
-void enableExtPower(bool enable) {
-  if (enable) {
-    digitalWrite(VEXT_PIN, 0);
-    delay(1);
-  } else {
-    digitalWrite(VEXT_PIN, 1);
-  }
-}
-
-void setup() {
-  // TODO: let it be handled by application
-  enableExtPower(true);
-}
+void setup() { Serial.begin(CONSOLE_BAUDRATE); }
 
 void loop() {
   // TODO: figure if setup may be used for init
-  softSerial softwareSerial(GPS_TX_PIN, GPS_RX_PIN);
   wrappers::HwSerial console;
+  console.begin(&Serial);
+
+  pwr::ExtPower extPower;
+  extPower.begin(VEXT_PIN);
+  wrappers::Led led(extPower);
+
+  softSerial softwareSerial(GPS_TX_PIN, GPS_RX_PIN);
+  softwareSerial.begin(GPS_BAUDRATE);
+
   wrappers::SwSerial gpsLink;
-  wrappers::Led led;
+  gpsLink.begin(&softwareSerial);
+
   wrappers::Gps gps;
+  gps.begin(&gpsLink);
+
   wrappers::LoRaWan lora(DeviceClass_t::CLASS_A,
                          LoRaMacRegion_t::LORAMAC_REGION_EU868);
-
-  Serial.begin(CONSOLE_BAUDRATE);
-  console.begin(&Serial);
-  softwareSerial.begin(GPS_BAUDRATE);
-  gpsLink.begin(&softwareSerial);
-  gps.begin(&gpsLink);
 
   app::App application(console, lora, gps, led);
   application.setup();

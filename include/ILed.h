@@ -1,8 +1,9 @@
 #pragma once
 
+#include "IExtDevicel.h"
 #include <stdint.h>
 
-class ILed {
+class ILed : public IExtDevice {
 public:
   static constexpr uint32_t LED_RED = 0x00FF0000;
   static constexpr uint32_t LED_GREEN = 0x0000FF00;

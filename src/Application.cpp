@@ -28,6 +28,7 @@ void App::preparePayload(const IGps::gpsData_t &data,
 }
 
 void App::setup() {
+  this->led.enable();
   this->led.setColor(ILed::LED_BLUE);
   this->console.println();
   this->console.print("\t*****************************\n");

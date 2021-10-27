@@ -1,14 +1,16 @@
 #pragma once
 
+#include "IGpsPower.h"
 #include "ILedPower.h"
 #include <Arduino.h>
 
 namespace pwr {
 
-class ExtPower : public ILedPower {
+class ExtPower : public IGpsPower, public ILedPower {
 private:
-  static constexpr uint8_t LED_POWER_MASK = 0x01;
-  static constexpr uint8_t GPS_POWER_MASK = 0x02;
+  static constexpr uint8_t GPS_POWER_MASK = 0x01;
+  static constexpr uint8_t LED_POWER_MASK = 0x02;
+  static constexpr uint8_t ALL_POWER_MASK = 0xFF;
   static constexpr uint8_t EXT_POWER_PIN_NOT_SET = 0xFF;
 
   uint8_t extPowerPin = EXT_POWER_PIN_NOT_SET;
@@ -17,7 +19,15 @@ private:
   void setExtPower(uint8_t powerMask, bool enabled);
 
 public:
-  void begin(uint8_t extPowerPin_) { extPowerPin = extPowerPin_; };
+  void begin(uint8_t extPowerPin_) {
+    this->extPowerPin = extPowerPin_;
+    pinMode(this->extPowerPin, OUTPUT_PULLUP);
+    this->setExtPower(ALL_POWER_MASK, false);
+  };
+
+  // IGpsPower
+  void gpsPowerOn() override;
+  void gpsPowerOff() override;
 
   // ILedPower
   void ledPowerOn() override;
@@ -34,13 +44,19 @@ void ExtPower::setExtPower(uint8_t powerMask, bool enabled) {
   }
 
   // LED and GPS share the same external power rail
-  if (peripheralsPowered) {
-    digitalWrite(extPowerPin, 0);
-    delay(1);
-  } else {
-    digitalWrite(extPowerPin, 1);
+  if (this->extPowerPin != EXT_POWER_PIN_NOT_SET) {
+    if (this->peripheralsPowered) {
+      digitalWrite(extPowerPin, 0);
+      delay(1);
+    } else {
+      digitalWrite(extPowerPin, 1);
+    }
   }
 }
+
+void ExtPower::gpsPowerOn() { this->setExtPower(GPS_POWER_MASK, true); }
+
+void ExtPower::gpsPowerOff() { this->setExtPower(GPS_POWER_MASK, false); }
 
 void ExtPower::ledPowerOn() { this->setExtPower(LED_POWER_MASK, true); }
 

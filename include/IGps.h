@@ -1,8 +1,9 @@
 #pragma once
 
+#include "IExtDevicel.h"
 #include <stdint.h>
 
-class IGps {
+class IGps : public IExtDevice {
 public:
   struct gpsTime_t {
     uint16_t year;

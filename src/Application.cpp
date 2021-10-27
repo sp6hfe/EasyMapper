@@ -28,7 +28,10 @@ void App::preparePayload(const IGps::gpsData_t &data,
 }
 
 void App::setup() {
+  // handle power automatically when config @ EE will be ready
   this->led.enable();
+  this->gps.enable();
+
   this->led.setColor(ILed::LED_BLUE);
   this->console.println();
   this->console.print("\t*****************************\n");

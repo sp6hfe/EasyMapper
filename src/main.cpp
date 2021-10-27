@@ -35,7 +35,7 @@ void loop() {
   wrappers::SwSerial gpsLink;
   gpsLink.begin(&softwareSerial);
 
-  wrappers::Gps gps;
+  wrappers::Gps gps(extPower);
   gps.begin(&gpsLink);
 
   wrappers::LoRaWan lora(DeviceClass_t::CLASS_A,

@@ -2,6 +2,16 @@
 
 namespace app {
 
+void SerialMenu::printInfo(Print &dataOut) {
+  dataOut.println();
+  dataOut.print("*****************************\n");
+  dataOut.print("* LoRa EasyMapper by SP6HFE *\n");
+  dataOut.print("*****************************\n");
+  dataOut.println();
+  dataOut.print("> type 'cfg' to enter config \n");
+  dataOut.println();
+}
+
 bool SerialMenu::entryTriggerDetected(uint8_t dataIn) {
   static uint8_t entryTriggerIndex = 0;
   bool isDetected = false;
@@ -23,7 +33,16 @@ bool SerialMenu::entryTriggerDetected(uint8_t dataIn) {
 
 bool SerialMenu::peform(uint8_t dataIn, Print &dataOut, config_t &config) {
   if (!this->isActive) {
-    this->isActive = this->entryTriggerDetected(dataIn);
+    switch (dataIn) {
+    case '\n':
+      // ENTER code id 0x0D0A so here we have already processed 0x0D by
+      // entryTriggerDetected
+      this->printInfo(dataOut);
+      break;
+    default:
+      this->isActive = this->entryTriggerDetected(dataIn);
+      break;
+    }
   }
 
   return this->isActive;

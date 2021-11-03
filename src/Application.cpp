@@ -55,6 +55,12 @@ void App::loop(uint32_t loopEnterMillis) {
   static uint32_t lastEnterMillis = 0;
   static uint32_t lastSentencesWithFixCount = 0;
 
+  int consoleInput = this->console.read();
+  if (consoleInput > -1) {
+    this->serialMenu.peform(static_cast<uint8_t>(consoleInput), this->console,
+                            this->config);
+  }
+
   // TODO: handle returned value
   this->gps.process();
 

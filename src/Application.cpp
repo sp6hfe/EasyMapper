@@ -51,14 +51,17 @@ void App::setup() {
 }
 
 void App::loop(uint32_t loopEnterMillis) {
+  // TODO: handle loopEnterMillis wrapping around 0
+
   static constexpr uint32_t MIN_READOUT_UPDATE_MS = 15000;
   static uint32_t lastEnterMillis = 0;
   static uint32_t lastSentencesWithFixCount = 0;
+  static bool serialMenuActive = false;
 
   int consoleInput = this->console.read();
   if (consoleInput > -1) {
-    this->serialMenu.peform(static_cast<uint8_t>(consoleInput), this->console,
-                            this->config);
+    serialMenuActive = this->serialMenu.peform(
+        static_cast<uint8_t>(consoleInput), this->console, this->config);
   }
 
   // TODO: handle returned value

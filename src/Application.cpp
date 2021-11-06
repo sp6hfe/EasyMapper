@@ -27,6 +27,14 @@ void App::preparePayload(const IGps::gpsData_t &data,
   payload[index] = gpsHdopBinary & 0xFF;
 }
 
+void App::loadMainMenu() {
+  this->serialMenu.load(this->mainMenu, this->mainMenuSize);
+}
+
+void App::loadPeripheralsMenu() {
+  this->serialMenu.load(this->peripheralsMenu, this->peripheralsMenuSize);
+}
+
 void App::setup() {
   // handle power automatically when config @ EE will be ready
   this->led.enable();
@@ -48,6 +56,8 @@ void App::setup() {
     // TODO: handle this situation
     this->led.setColor(ILed::LED_RED);
   }
+
+  this->loadMainMenu();
 }
 
 void App::loop(uint32_t loopEnterMillis) {

@@ -21,7 +21,23 @@ private:
   ILed &led;
   uint8_t payload[PAYLOAD_SIZE];
   IGps::gpsData_t gpsData;
+
+  // forward declarations used in menu building
+  void loadMainMenu();
+  void loadPeripheralsMenu();
+
   SerialMenu serialMenu;
+
+  const SerialMenuEntry mainMenu[2] = {
+      {"1 PERIPHERALS", '1', nullptr, SerialMenuEntryType::SUBMENU, nullptr},
+      {"2 LORA", '2', nullptr, SerialMenuEntryType::SUBMENU, nullptr}};
+  const uint8_t mainMenuSize = SERIAL_MENU_SIZE(mainMenu);
+
+  const SerialMenuEntry peripheralsMenu[2] = {
+      {"1 LED", '1', nullptr, SerialMenuEntryType::BOOLEAN, &config.ledEnabled},
+      {"2 GPS", '2', nullptr, SerialMenuEntryType::BOOLEAN,
+       &config.gpsEnabled}};
+  const uint8_t peripheralsMenuSize = SERIAL_MENU_SIZE(peripheralsMenu);
 
   static void preparePayload(const IGps::gpsData_t &data,
                              uint8_t (&payload)[PAYLOAD_SIZE]);

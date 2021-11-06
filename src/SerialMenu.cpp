@@ -31,6 +31,31 @@ bool SerialMenu::entryTriggerDetected(uint8_t dataIn) {
   return isDetected;
 }
 
+void SerialMenu::load(const SerialMenuEntry *menuEntries,
+                      const uint8_t amountOfMenuEntries) {
+  this->menuEntries = menuEntries;
+  this->amountOfMenuEntries = amountOfMenuEntries;
+}
+
+void SerialMenu::display(Print &dataOut) const {
+  if (this->menuEntries) {
+    const uint8_t MENU_LETTERS_WIDE = 38;
+    dataOut.println("+-----------------------------------+");
+    dataOut.println("| Select an option or ESC to return |");
+    dataOut.println("+-----------------------------------+");
+    for (uint8_t index; index < this->amountOfMenuEntries; index++) {
+      dataOut.print("| ");
+      uint8_t lettersPrinted =
+          dataOut.print(this->menuEntries[index].getDescription());
+      for (; lettersPrinted < (MENU_LETTERS_WIDE - 4); lettersPrinted++) {
+        dataOut.print(" ");
+      }
+      dataOut.println("|");
+    }
+    dataOut.println("+-----------------------------------+");
+  }
+}
+
 bool SerialMenu::peform(uint8_t dataIn, Print &dataOut, config_t &config) {
   if (!this->isActive) {
     switch (dataIn) {
@@ -42,6 +67,15 @@ bool SerialMenu::peform(uint8_t dataIn, Print &dataOut, config_t &config) {
     default:
       this->isActive = this->entryTriggerDetected(dataIn);
       break;
+    }
+  }
+
+  if (this->isActive) {
+    if (this->currentMenuDisplayed) {
+      // analyze inputs
+    } else {
+      this->display(dataOut);
+      this->currentMenuDisplayed = true;
     }
   }
 

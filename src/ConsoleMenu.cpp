@@ -1,8 +1,8 @@
-#include "SerialMenu.h"
+#include "ConsoleMenu.h"
 
 namespace app {
 
-void SerialMenu::printInfo(Print &dataOut) {
+void ConsoleMenu::printInfo(Print &dataOut) {
   dataOut.println();
   dataOut.print("*****************************\n");
   dataOut.print("* LoRa EasyMapper by SP6HFE *\n");
@@ -12,7 +12,7 @@ void SerialMenu::printInfo(Print &dataOut) {
   dataOut.println();
 }
 
-bool SerialMenu::entryTriggerDetected(uint8_t dataIn) {
+bool ConsoleMenu::entryTriggerDetected(uint8_t dataIn) {
   static uint8_t entryTriggerIndex = 0;
   bool isDetected = false;
 
@@ -31,13 +31,13 @@ bool SerialMenu::entryTriggerDetected(uint8_t dataIn) {
   return isDetected;
 }
 
-void SerialMenu::load(const SerialMenuEntry *menuEntries,
-                      const uint8_t amountOfMenuEntries) {
+void ConsoleMenu::load(const ConsoleMenuEntry *menuEntries,
+                       const uint8_t amountOfMenuEntries) {
   this->menuEntries = menuEntries;
   this->amountOfMenuEntries = amountOfMenuEntries;
 }
 
-void SerialMenu::display(Print &dataOut) const {
+void ConsoleMenu::display(Print &dataOut) const {
   if (this->menuEntries) {
     const uint8_t MENU_LETTERS_WIDE = 38;
     dataOut.println("+-----------------------------------+");
@@ -56,7 +56,7 @@ void SerialMenu::display(Print &dataOut) const {
   }
 }
 
-bool SerialMenu::peform(uint8_t dataIn, Print &dataOut, config_t &config) {
+bool ConsoleMenu::peform(uint8_t dataIn, Print &dataOut, config_t &config) {
   if (!this->isActive) {
     switch (dataIn) {
     case '\n':

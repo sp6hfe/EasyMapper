@@ -28,11 +28,11 @@ void App::preparePayload(const IGps::gpsData_t &data,
 }
 
 void App::loadMainMenu() {
-  this->serialMenu.load(this->mainMenu, this->mainMenuSize);
+  this->consoleMenu.load(this->mainMenu, this->mainMenuSize);
 }
 
 void App::loadPeripheralsMenu() {
-  this->serialMenu.load(this->peripheralsMenu, this->peripheralsMenuSize);
+  this->consoleMenu.load(this->peripheralsMenu, this->peripheralsMenuSize);
 }
 
 void App::setup() {
@@ -56,8 +56,6 @@ void App::setup() {
     // TODO: handle this situation
     this->led.setColor(ILed::LED_RED);
   }
-
-  this->loadMainMenu();
 }
 
 void App::loop(uint32_t loopEnterMillis) {
@@ -66,11 +64,14 @@ void App::loop(uint32_t loopEnterMillis) {
   static constexpr uint32_t MIN_READOUT_UPDATE_MS = 15000;
   static uint32_t lastEnterMillis = 0;
   static uint32_t lastSentencesWithFixCount = 0;
-  static bool serialMenuActive = false;
+  static bool consoleMenuActive = false;
 
   int consoleInput = this->console.read();
   if (consoleInput > -1) {
-    serialMenuActive = this->serialMenu.peform(
+    if (!consoleMenuActive) {
+      this->loadMainMenu();
+    }
+    consoleMenuActive = this->consoleMenu.peform(
         static_cast<uint8_t>(consoleInput), this->console, this->config);
   }
 

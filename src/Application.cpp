@@ -27,6 +27,19 @@ void App::preparePayload(const IGps::gpsData_t &data,
   payload[index] = gpsHdopBinary & 0xFF;
 }
 
+void App::handleConsoleMenu() {
+  int consoleDataIn = this->console.read();
+
+  if (consoleDataIn > -1) {
+    if (!this->consoleMenuActive) {
+      // set default menu on enter
+      this->loadMainMenu();
+    }
+    this->consoleMenuActive = this->consoleMenu.peform(
+        static_cast<uint8_t>(consoleDataIn), this->console, this->config);
+  }
+}
+
 void App::loadMainMenu() {
   this->consoleMenu.load(this->mainMenu, this->mainMenuSize);
 }
@@ -60,31 +73,25 @@ void App::loop(uint32_t loopEnterMillis) {
   static constexpr uint32_t MIN_READOUT_UPDATE_MS = 15000;
   static uint32_t lastEnterMillis = 0;
   static uint32_t lastSentencesWithFixCount = 0;
-  static bool consoleMenuActive = false;
 
-  int consoleInput = this->console.read();
-  if (consoleInput > -1) {
-    if (!consoleMenuActive) {
-      this->loadMainMenu();
-    }
-    consoleMenuActive = this->consoleMenu.peform(
-        static_cast<uint8_t>(consoleInput), this->console, this->config);
-  }
-
-  // TODO: handle returned value
-  this->gps.process();
+  bool dataOkToSend = false;
 
   if (loopEnterMillis < lastEnterMillis) {
     lastEnterMillis = 0;
   }
+
+  this->handleConsoleMenu();
+
+  // TODO: handle returned value
+  this->gps.process();
 
   if (loopEnterMillis - lastEnterMillis >= MIN_READOUT_UPDATE_MS ||
       lastEnterMillis == 0) {
     if (this->gps.isDataUpdated()) {
       // gater the data
       this->gps.getData(this->gpsData);
+
       // decide if data is worth airing
-      bool dataOkToSend = false;
       if (this->gps.isDataValid()) {
         dataOkToSend = true;
       }

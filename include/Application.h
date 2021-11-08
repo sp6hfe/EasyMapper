@@ -41,6 +41,7 @@ private:
   uint8_t payload[PAYLOAD_SIZE];
   IGps::gpsData_t gpsData;
 
+  bool consoleMenuActive = false;
   ConsoleMenu consoleMenu;
 
   const ConsoleMenuEntry mainMenu[3] = {
@@ -62,6 +63,8 @@ private:
 
   static void preparePayload(const IGps::gpsData_t &data,
                              uint8_t (&payload)[PAYLOAD_SIZE]);
+
+  void handleConsoleMenu();
 
 public:
   void setup();

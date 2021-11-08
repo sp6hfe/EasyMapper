@@ -15,24 +15,26 @@ private:
   const char *description;
   const uint8_t actionKey;
   void (*action)(void *);
+  void *actionParameter; // const?
   const ConsoleMenuEntryType entryType;
   const void *value;
 
 public:
   const char *getDescription() const { return description; };
   const uint8_t getActionKey() const { return actionKey; };
-  void makeAction(void *object) const {
+  void makeAction() const {
     if (action) {
-      action(object);
+      action(actionParameter);
     }
   };
   const ConsoleMenuEntryType getEntryType() const { return entryType; };
 
   ConsoleMenuEntry(const char *description_, const uint8_t actionKey_,
-                   void (*action_)(void *),
+                   void (*action_)(void *), void *actionParameter_,
                    const ConsoleMenuEntryType entryType_, const void *value_)
       : description(description_), actionKey(actionKey_), action(action_),
-        entryType(entryType_), value(value_) {}
+        actionParameter(actionParameter_), entryType(entryType_),
+        value(value_) {}
 };
 
 class ConsoleMenu {

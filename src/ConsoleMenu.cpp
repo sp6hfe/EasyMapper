@@ -62,7 +62,7 @@ bool ConsoleMenu::processInput(uint8_t dataIn) {
     if (dataIn == this->menuEntries[index].getActionKey()) {
       switch (this->menuEntries[index].getEntryType()) {
       case ConsoleMenuEntryType::SUBMENU:
-        this->menuEntries[index].makeAction(reinterpret_cast<void *>(this));
+        this->menuEntries[index].makeAction();
         break;
       case ConsoleMenuEntryType::EXIT:
         ifMenuActive = false;

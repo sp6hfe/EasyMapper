@@ -41,18 +41,14 @@ void App::setup() {
   this->gps.enable();
 
   this->led.setColor(ILed::LED_BLUE);
-  this->console.println();
-  this->console.print("\t*****************************\n");
-  this->console.print("\t* LoRa EasyMapper by SP6HFE *\n");
-  this->console.print("\t*****************************\n");
-  this->console.print("\nJoining with ABP...\n");
+  this->console.println("\nJoining with ABP...");
   // this->lora.setFixedDataRate();
   this->lora.joinABP(secrets::nwkSKey, secrets::appSKey, secrets::devAddr);
   if (this->lora.isJoined()) {
-    this->console.print("Joined\n");
+    this->console.println("Joined.");
     this->led.off();
   } else {
-    this->console.print("Join failed\n");
+    this->console.println("Join failed.");
     // TODO: handle this situation
     this->led.setColor(ILed::LED_RED);
   }
@@ -94,29 +90,31 @@ void App::loop(uint32_t loopEnterMillis) {
       }
 
       // print report
-      this->console.printf("%02d.%02d.%d %02d:%02d:%02d ",
-                           this->gpsData.time.day, this->gpsData.time.month,
-                           this->gpsData.time.year, this->gpsData.time.hour,
-                           this->gpsData.time.minute,
-                           this->gpsData.time.second);
-      if (dataOkToSend) {
-        this->console.print("[+]");
-      } else {
-        this->console.print("[-]");
+      if (!consoleMenuActive) {
+        this->console.printf("%02d.%02d.%d %02d:%02d:%02d ",
+                             this->gpsData.time.day, this->gpsData.time.month,
+                             this->gpsData.time.year, this->gpsData.time.hour,
+                             this->gpsData.time.minute,
+                             this->gpsData.time.second);
+        if (dataOkToSend) {
+          this->console.print("[+]");
+        } else {
+          this->console.print("[-]");
+        }
+        this->console.print(" Lat: ");
+        utils::Numeric::printDouble(this->console,
+                                    this->gpsData.coordinates.latitude, 6);
+        this->console.print(", Lon: ");
+        utils::Numeric::printDouble(this->console,
+                                    this->gpsData.coordinates.longtitude, 6);
+        this->console.print(", Alt: ");
+        utils::Numeric::printDouble(this->console,
+                                    this->gpsData.coordinates.altitude, 1);
+        this->console.print(", HDOP: ");
+        utils::Numeric::printDouble(this->console,
+                                    this->gpsData.coordinates.hdop, 1);
+        this->console.println();
       }
-      this->console.print(" Lat: ");
-      utils::Numeric::printDouble(this->console,
-                                  this->gpsData.coordinates.latitude, 6);
-      this->console.print(", Lon: ");
-      utils::Numeric::printDouble(this->console,
-                                  this->gpsData.coordinates.longtitude, 6);
-      this->console.print(", Alt: ");
-      utils::Numeric::printDouble(this->console,
-                                  this->gpsData.coordinates.altitude, 1);
-      this->console.print(", HDOP: ");
-      utils::Numeric::printDouble(this->console, this->gpsData.coordinates.hdop,
-                                  1);
-      this->console.println();
 
       // air data
       if (dataOkToSend) {

@@ -64,7 +64,12 @@ private:
   static void preparePayload(const IGps::gpsData_t &data,
                              uint8_t (&payload)[PAYLOAD_SIZE]);
 
+  static uint32_t calculateDelay(const uint32_t lastMillis,
+                                 const uint32_t currentMillis);
+
+  void printGpsData();
   void handleConsoleMenu();
+  bool handleGps(bool readData);
 
 public:
   void setup();

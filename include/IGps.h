@@ -24,6 +24,7 @@ public:
   struct gpsData_t {
     gpsCoordinates_t coordinates;
     gpsTime_t time;
+    bool isValid;
   };
 
   virtual bool process() = 0;

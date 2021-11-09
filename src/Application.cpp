@@ -27,6 +27,45 @@ void App::preparePayload(const IGps::gpsData_t &data,
   payload[index] = gpsHdopBinary & 0xFF;
 }
 
+uint32_t App::calculateDelay(const uint32_t lastMillis,
+                             const uint32_t currentMillis) {
+  uint32_t delay = 0;
+
+  if (lastMillis < currentMillis) {
+    delay = currentMillis - lastMillis;
+  } else {
+    // millis counter rolled-over 0 and we assume delay was shorter than millis
+    // counter capacity
+    delay = (0xFFFFFFFF - lastMillis) + currentMillis + 1;
+  }
+
+  return delay;
+}
+
+void App::printGpsData() {
+  this->console.printf("%02d.%02d.%d %02d:%02d:%02d ", this->gpsData.time.day,
+                       this->gpsData.time.month, this->gpsData.time.year,
+                       this->gpsData.time.hour, this->gpsData.time.minute,
+                       this->gpsData.time.second);
+  if (this->gpsData.isValid) {
+    this->console.print("[+]");
+  } else {
+    this->console.print("[-]");
+  }
+  this->console.print(" Lat: ");
+  utils::Numeric::printDouble(this->console, this->gpsData.coordinates.latitude,
+                              6);
+  this->console.print(", Lon: ");
+  utils::Numeric::printDouble(this->console,
+                              this->gpsData.coordinates.longtitude, 6);
+  this->console.print(", Alt: ");
+  utils::Numeric::printDouble(this->console, this->gpsData.coordinates.altitude,
+                              1);
+  this->console.print(", HDOP: ");
+  utils::Numeric::printDouble(this->console, this->gpsData.coordinates.hdop, 1);
+  this->console.println();
+}
+
 void App::handleConsoleMenu() {
   int consoleDataIn = this->console.read();
 
@@ -38,6 +77,17 @@ void App::handleConsoleMenu() {
     this->consoleMenuActive = this->consoleMenu.peform(
         static_cast<uint8_t>(consoleDataIn), this->console, this->config);
   }
+}
+
+bool App::handleGps(bool readData) {
+  bool ifNewGpsDataRead = false;
+
+  if (this->gps.process() && this->gps.isDataUpdated() && readData) {
+    this->gps.getData(this->gpsData);
+    ifNewGpsDataRead = true;
+  }
+
+  return ifNewGpsDataRead;
 }
 
 void App::loadMainMenu() {
@@ -68,71 +118,32 @@ void App::setup() {
 }
 
 void App::loop(uint32_t loopEnterMillis) {
-  // TODO: handle loopEnterMillis wrapping around 0
-
-  static constexpr uint32_t MIN_READOUT_UPDATE_MS = 15000;
-  static uint32_t lastEnterMillis = 0;
-  static uint32_t lastSentencesWithFixCount = 0;
-
-  bool dataOkToSend = false;
-
-  if (loopEnterMillis < lastEnterMillis) {
-    lastEnterMillis = 0;
-  }
+  static constexpr uint32_t GPS_READOUT_INTERVAL_MS = 15000;
+  static uint32_t lastMillisOnGpsDataRead = 0;
 
   this->handleConsoleMenu();
 
-  // TODO: handle returned value
-  this->gps.process();
+  if (!this->consoleMenuActive) {
+    uint32_t delaySinceGpsDataRead =
+        this->calculateDelay(lastMillisOnGpsDataRead, loopEnterMillis);
+    bool gpsDataReadFlag =
+        (delaySinceGpsDataRead >= GPS_READOUT_INTERVAL_MS) ? true : false;
 
-  if (loopEnterMillis - lastEnterMillis >= MIN_READOUT_UPDATE_MS ||
-      lastEnterMillis == 0) {
-    if (this->gps.isDataUpdated()) {
-      // gater the data
-      this->gps.getData(this->gpsData);
+    bool newGpsDataRead = this->handleGps(gpsDataReadFlag);
+    this->printGpsData();
 
-      // decide if data is worth airing
-      if (this->gps.isDataValid()) {
-        dataOkToSend = true;
-      }
+    if (gpsDataReadFlag) {
+      // mark GPS data read was just requested (despite the fact if it was
+      // valid to read)
+      lastMillisOnGpsDataRead = loopEnterMillis;
+    }
 
-      // print report
-      if (!consoleMenuActive) {
-        this->console.printf("%02d.%02d.%d %02d:%02d:%02d ",
-                             this->gpsData.time.day, this->gpsData.time.month,
-                             this->gpsData.time.year, this->gpsData.time.hour,
-                             this->gpsData.time.minute,
-                             this->gpsData.time.second);
-        if (dataOkToSend) {
-          this->console.print("[+]");
-        } else {
-          this->console.print("[-]");
-        }
-        this->console.print(" Lat: ");
-        utils::Numeric::printDouble(this->console,
-                                    this->gpsData.coordinates.latitude, 6);
-        this->console.print(", Lon: ");
-        utils::Numeric::printDouble(this->console,
-                                    this->gpsData.coordinates.longtitude, 6);
-        this->console.print(", Alt: ");
-        utils::Numeric::printDouble(this->console,
-                                    this->gpsData.coordinates.altitude, 1);
-        this->console.print(", HDOP: ");
-        utils::Numeric::printDouble(this->console,
-                                    this->gpsData.coordinates.hdop, 1);
-        this->console.println();
-      }
-
-      // air data
-      if (dataOkToSend) {
-        preparePayload(this->gpsData, payload);
-        this->led.setColor(ILed::LED_GREEN);
-        this->lora.send(sizeof(payload), payload, 1, false);
-        this->led.off();
-      }
-
-      // keep updates interval
-      lastEnterMillis = loopEnterMillis;
+    if (newGpsDataRead && this->gpsData.isValid) {
+      // air GPS data
+      preparePayload(this->gpsData, payload);
+      this->led.setColor(ILed::LED_GREEN);
+      this->lora.send(sizeof(payload), payload, 1, false);
+      this->led.off();
     }
   }
 }

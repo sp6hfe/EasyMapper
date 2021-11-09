@@ -61,6 +61,7 @@ void Gps::getData(gpsData_t &data) {
   data.time.hour = this->gps.time.hour();
   data.time.minute = this->gps.time.minute();
   data.time.second = this->gps.time.second();
+  data.isValid = this->isDataValid();
 }
 
 void Gps::enable() {

@@ -69,7 +69,7 @@ void App::printGpsData() {
 void App::handleConsoleMenu() {
   int consoleDataIn = this->console.read();
 
-  if (consoleDataIn > -1) {
+  if (consoleDataIn >= 0) {
     if (!this->consoleMenuActive) {
       // set default menu on enter
       this->loadMainMenu();
@@ -130,7 +130,9 @@ void App::loop(uint32_t loopEnterMillis) {
         (delaySinceGpsDataRead >= GPS_READOUT_INTERVAL_MS) ? true : false;
 
     bool newGpsDataRead = this->handleGps(gpsDataReadFlag);
-    this->printGpsData();
+    if (newGpsDataRead) {
+      this->printGpsData();
+    }
 
     if (gpsDataReadFlag) {
       // mark GPS data read was just requested (despite the fact if it was

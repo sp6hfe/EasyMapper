@@ -21,22 +21,55 @@ bool ConsoleMenu::entryTextDetection(uint8_t dataIn) {
   return isDetected;
 }
 
+uint8_t ConsoleMenu::printEntryValue(Print &dataOut,
+                                     ConsoleMenuEntryType entryType) const {
+  uint8_t numberOfPrintedLetters = 0;
+
+  switch (entryType) {
+  case ConsoleMenuEntryType::SUBMENU:
+    numberOfPrintedLetters += dataOut.print("[   ]");
+    break;
+  case ConsoleMenuEntryType::EXIT:
+    numberOfPrintedLetters += dataOut.print("[xxx]");
+    break;
+  default:
+    break;
+  }
+
+  return numberOfPrintedLetters;
+}
+
 void ConsoleMenu::display(Print &dataOut) const {
   if (this->isActive) {
-    const uint8_t MENU_LETTERS_WIDE = 38;
+    const uint8_t MENU_DESCRIPTION_SECTION_WIDE = 25;
+    const uint8_t MENU_VALUES_SECTION_WIDE = 5;
+
     dataOut.println("+-----------------------------------+");
     dataOut.println("| Select an option or ESC to return |");
     dataOut.println("+-----------------------------------+");
+
     if (this->newMenuToDisplay) {
       if (this->menuEntries) {
         for (uint8_t index; index < this->amountOfMenuEntries; index++) {
+          // leading bar with separator
           dataOut.print("| ");
+          // menu entry description + fill
           uint8_t lettersPrinted =
               dataOut.print(this->menuEntries[index].getDescription());
-          for (; lettersPrinted < (MENU_LETTERS_WIDE - 4); lettersPrinted++) {
+          for (; lettersPrinted < MENU_DESCRIPTION_SECTION_WIDE;
+               lettersPrinted++) {
             dataOut.print(" ");
           }
-          dataOut.println("|");
+          // middle separator
+          dataOut.print(" | ");
+          // value part + fill
+          lettersPrinted = this->printEntryValue(
+              dataOut, this->menuEntries[index].getEntryType());
+          for (; lettersPrinted < MENU_VALUES_SECTION_WIDE; lettersPrinted++) {
+            dataOut.print(" ");
+          }
+          // final bar with separator
+          dataOut.println(" |");
         }
       } else { // if (this->menuEntries) {
         dataOut.println("|  no options - menu misconfigured  |");
@@ -46,6 +79,7 @@ void ConsoleMenu::display(Print &dataOut) const {
     }
     dataOut.println("+-----------------------------------+");
   } else { // if (this->isActive) {
+    // initial screen displayed when menu is not yet activated
     dataOut.println("+-----------------------------------+");
     dataOut.println("|     LoRa EasyMapper by SP6HFE     |");
     dataOut.println("+-----------------------------------+");

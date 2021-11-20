@@ -51,6 +51,7 @@ private:
 
   bool entryTextDetection(uint8_t dataIn);
 
+  uint8_t printEntryValue(Print &dataOut, ConsoleMenuEntryType entryType) const;
   void display(Print &dataOut) const;
   bool processInput(uint8_t dataIn);
 

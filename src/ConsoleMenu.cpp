@@ -21,22 +21,33 @@ bool ConsoleMenu::entryTextDetection(uint8_t dataIn) {
   return isDetected;
 }
 
-uint8_t ConsoleMenu::printEntryValue(Print &dataOut,
-                                     ConsoleMenuEntryType entryType) const {
-  uint8_t numberOfPrintedLetters = 0;
+void ConsoleMenu::printEntryDescription(Print &dataOut, const char *description,
+                                        const uint8_t displaySize) const {
+  uint8_t lettersPrinted = dataOut.print(description);
+  for (; lettersPrinted < displaySize; lettersPrinted++) {
+    dataOut.print(" ");
+  }
+}
+
+void ConsoleMenu::printEntryValue(Print &dataOut,
+                                  const ConsoleMenuEntryType entryType,
+                                  const uint8_t fillToSize) const {
+  uint8_t lettersPrinted = 0;
 
   switch (entryType) {
   case ConsoleMenuEntryType::SUBMENU:
-    numberOfPrintedLetters += dataOut.print("[   ]");
+    lettersPrinted += dataOut.print("[   ]");
     break;
   case ConsoleMenuEntryType::EXIT:
-    numberOfPrintedLetters += dataOut.print("[xxx]");
+    lettersPrinted += dataOut.print("[xxx]");
     break;
   default:
     break;
   }
 
-  return numberOfPrintedLetters;
+  for (; lettersPrinted < fillToSize; lettersPrinted++) {
+    dataOut.print(" ");
+  }
 }
 
 void ConsoleMenu::display(Print &dataOut) const {
@@ -54,20 +65,15 @@ void ConsoleMenu::display(Print &dataOut) const {
           // leading bar with separator
           dataOut.print("| ");
           // menu entry description + fill
-          uint8_t lettersPrinted =
-              dataOut.print(this->menuEntries[index].getDescription());
-          for (; lettersPrinted < MENU_DESCRIPTION_SECTION_WIDE;
-               lettersPrinted++) {
-            dataOut.print(" ");
-          }
+          this->printEntryDescription(dataOut,
+                                      this->menuEntries[index].getDescription(),
+                                      MENU_DESCRIPTION_SECTION_WIDE);
           // middle separator
           dataOut.print(" | ");
           // value part + fill
-          lettersPrinted = this->printEntryValue(
-              dataOut, this->menuEntries[index].getEntryType());
-          for (; lettersPrinted < MENU_VALUES_SECTION_WIDE; lettersPrinted++) {
-            dataOut.print(" ");
-          }
+          this->printEntryValue(dataOut,
+                                this->menuEntries[index].getEntryType(),
+                                MENU_VALUES_SECTION_WIDE);
           // final bar with separator
           dataOut.println(" |");
         }
@@ -124,8 +130,8 @@ bool ConsoleMenu::peform(uint8_t dataIn, Print &dataOut, config_t &config) {
   if (!this->isActive) {
     switch (dataIn) {
     case '\n':
-      // ENTER code id 0x0D0A so here we have already processed 0x0D by
-      // entryTriggerDetected
+      // ENTER code is 0x0D0A so here we have already processed 0x0D by
+      // entryTextDetection
       this->display(dataOut);
       break;
     default:

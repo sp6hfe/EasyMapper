@@ -32,8 +32,24 @@ public:
     }
   };
 
+  static bool isLedEnabledWrapper(void *appClass) {
+    if (appClass) {
+      App *thisApp = reinterpret_cast<App *>(appClass);
+      return thisApp->led.isEnabled();
+    }
+    return false;
+  };
+
+  static bool isGpsEnabledWrapper(void *appClass) {
+    if (appClass) {
+      App *thisApp = reinterpret_cast<App *>(appClass);
+      return thisApp->gps.isEnabled();
+    }
+    return false;
+  };
+
 private:
-  config_t config;
+  // config_t config;
   Stream &console;
   ILoRaWan &lora;
   IGps &gps;
@@ -46,19 +62,22 @@ private:
 
   const ConsoleMenuEntry mainMenu[3] = {
       {"  1 Peripherals", '1', loadPeripheralsMenuWrapper,
-       reinterpret_cast<void *>(this), ConsoleMenuEntryType::SUBMENU, nullptr},
-      {"  2 LoRa", '2', nullptr, nullptr, ConsoleMenuEntryType::NONE, nullptr},
+       reinterpret_cast<void *>(this), ConsoleMenuEntryType::SUBMENU, nullptr,
+       nullptr},
+      {"  2 LoRa", '2', nullptr, nullptr, ConsoleMenuEntryType::NONE, nullptr,
+       nullptr},
       {"ESC Exit configuration", ConsoleMenu::ESC_KEY_CODE, nullptr, nullptr,
-       ConsoleMenuEntryType::EXIT, nullptr}};
+       ConsoleMenuEntryType::EXIT, nullptr, nullptr}};
   const uint8_t mainMenuSize = CONSOLE_MENU_SIZE(mainMenu);
 
   const ConsoleMenuEntry peripheralsMenu[3] = {
       {"  1 LED", '1', nullptr, nullptr, ConsoleMenuEntryType::BOOLEAN,
-       &config.ledEnabled},
+       isLedEnabledWrapper, reinterpret_cast<void *>(this)},
       {"  2 GPS", '2', nullptr, nullptr, ConsoleMenuEntryType::BOOLEAN,
-       &config.gpsEnabled},
+       isGpsEnabledWrapper, reinterpret_cast<void *>(this)},
       {"ESC Main menu", ConsoleMenu::ESC_KEY_CODE, loadMainMenuWrapper,
-       reinterpret_cast<void *>(this), ConsoleMenuEntryType::SUBMENU, nullptr}};
+       reinterpret_cast<void *>(this), ConsoleMenuEntryType::SUBMENU, nullptr,
+       nullptr}};
   const uint8_t peripheralsMenuSize = CONSOLE_MENU_SIZE(peripheralsMenu);
 
   static void preparePayload(const IGps::gpsData_t &data,

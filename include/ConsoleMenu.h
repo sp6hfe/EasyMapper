@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Config.h"
+// #include "Config.h"
 #include <Print.h>
 #include <pgmspace.h>
 
@@ -17,24 +17,32 @@ private:
   void (*action)(void *);
   void *actionParameter; // const?
   const ConsoleMenuEntryType entryType;
-  const void *value;
+  bool (*boolValue)(void *);
+  void *boolValueParameter; // const?
 
 public:
-  const char *getDescription() const { return description; };
-  const uint8_t getActionKey() const { return actionKey; };
+  const char *getDescription() const { return this->description; };
+  const uint8_t getActionKey() const { return this->actionKey; };
   void makeAction() const {
-    if (action) {
-      action(actionParameter);
+    if (this->action) {
+      this->action(actionParameter);
     }
   };
   const ConsoleMenuEntryType getEntryType() const { return entryType; };
+  const bool getBoolValue() const {
+    if (this->boolValue) {
+      return this->boolValue(boolValueParameter);
+    }
+    return false;
+  };
 
   ConsoleMenuEntry(const char *description_, const uint8_t actionKey_,
                    void (*action_)(void *), void *actionParameter_,
-                   const ConsoleMenuEntryType entryType_, const void *value_)
+                   const ConsoleMenuEntryType entryType_,
+                   bool (*boolValue_)(void *), void *boolValueParameter_)
       : description(description_), actionKey(actionKey_), action(action_),
         actionParameter(actionParameter_), entryType(entryType_),
-        value(value_) {}
+        boolValue(boolValue_), boolValueParameter(boolValueParameter_) {}
 };
 
 class ConsoleMenu {
@@ -54,14 +62,14 @@ private:
   void printEntryDescription(Print &dataOut, const char *description,
                              const uint8_t fillToSize) const;
   void printEntryValue(Print &dataOut, const ConsoleMenuEntryType entryType,
-                       const uint8_t fillToSize) const;
+                       const bool boolValue, const uint8_t fillToSize) const;
   void display(Print &dataOut) const;
   bool processInput(uint8_t dataIn);
 
 public:
   void load(const ConsoleMenuEntry *menuEntries,
             const uint8_t amountOfMenuEntries);
-  bool peform(uint8_t dataIn, Print &dataOut, config_t &config);
+  bool peform(uint8_t dataIn, Print &dataOut);
 
   ConsoleMenu(){};
 };

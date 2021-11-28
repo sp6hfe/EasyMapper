@@ -31,15 +31,23 @@ void ConsoleMenu::printEntryDescription(Print &dataOut, const char *description,
 
 void ConsoleMenu::printEntryValue(Print &dataOut,
                                   const ConsoleMenuEntryType entryType,
+                                  const bool boolValue,
                                   const uint8_t fillToSize) const {
   uint8_t lettersPrinted = 0;
 
   switch (entryType) {
   case ConsoleMenuEntryType::SUBMENU:
-    lettersPrinted += dataOut.print("[   ]");
+    lettersPrinted += dataOut.print("[...]");
     break;
   case ConsoleMenuEntryType::EXIT:
     lettersPrinted += dataOut.print("[xxx]");
+    break;
+  case ConsoleMenuEntryType::BOOLEAN:
+    if (boolValue) {
+      lettersPrinted += dataOut.print("[ENA]");
+    } else {
+      lettersPrinted += dataOut.print("[OFF]");
+    }
     break;
   default:
     break;
@@ -51,10 +59,10 @@ void ConsoleMenu::printEntryValue(Print &dataOut,
 }
 
 void ConsoleMenu::display(Print &dataOut) const {
-  if (this->isActive) {
-    const uint8_t MENU_DESCRIPTION_SECTION_WIDE = 25;
-    const uint8_t MENU_VALUES_SECTION_WIDE = 5;
+  static constexpr uint8_t MENU_DESCRIPTION_SECTION_WIDE = 25;
+  static constexpr uint8_t MENU_VALUES_SECTION_WIDE = 5;
 
+  if (this->isActive) {
     dataOut.println("+-----------------------------------+");
     dataOut.println("| Select an option or ESC to return |");
     dataOut.println("+-----------------------------------+");
@@ -73,6 +81,7 @@ void ConsoleMenu::display(Print &dataOut) const {
           // value part + fill
           this->printEntryValue(dataOut,
                                 this->menuEntries[index].getEntryType(),
+                                this->menuEntries[index].getBoolValue(),
                                 MENU_VALUES_SECTION_WIDE);
           // final bar with separator
           dataOut.println(" |");
@@ -126,7 +135,7 @@ void ConsoleMenu::load(const ConsoleMenuEntry *menuEntries,
   this->newMenuToDisplay = true;
 }
 
-bool ConsoleMenu::peform(uint8_t dataIn, Print &dataOut, config_t &config) {
+bool ConsoleMenu::peform(uint8_t dataIn, Print &dataOut) {
   if (!this->isActive) {
     switch (dataIn) {
     case '\n':

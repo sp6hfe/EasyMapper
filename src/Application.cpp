@@ -75,7 +75,7 @@ void App::handleConsoleMenu() {
       this->loadMainMenu();
     }
     this->consoleMenuActive = this->consoleMenu.peform(
-        static_cast<uint8_t>(consoleDataIn), this->console, this->config);
+        static_cast<uint8_t>(consoleDataIn), this->console);
   }
 }
 

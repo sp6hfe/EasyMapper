@@ -2,9 +2,6 @@
 
 namespace app {
 
-struct config_t {
-  bool ledEnabled;
-  bool gpsEnabled;
-};
+struct config_t {};
 
 } // namespace app

@@ -44,7 +44,7 @@ void loop() {
   app::App application(console, lora, gps, led);
   application.setup();
 
-  while (1) {
+  for (;;) {
     application.loop(millis());
   }
 }

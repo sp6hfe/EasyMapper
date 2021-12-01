@@ -79,15 +79,15 @@ void App::handleConsoleMenu() {
   }
 }
 
-bool App::handleGps(bool readData) {
-  bool ifNewGpsDataRead = false;
+bool App::handleGps(bool cacheData) {
+  bool ifNewGpsDataCached = false;
 
-  if (this->gps.process() && this->gps.isDataUpdated() && readData) {
+  if (this->gps.process() && this->gps.isDataUpdated() && cacheData) {
     this->gps.getData(this->gpsData);
-    ifNewGpsDataRead = true;
+    ifNewGpsDataCached = true;
   }
 
-  return ifNewGpsDataRead;
+  return ifNewGpsDataCached;
 }
 
 void App::loadMainMenu() {
@@ -118,29 +118,29 @@ void App::setup() {
 }
 
 void App::loop(uint32_t loopEnterMillis) {
-  static constexpr uint32_t GPS_READOUT_INTERVAL_MS = 15000;
-  static uint32_t lastMillisOnGpsDataRead = 0;
+  static constexpr uint32_t GPS_DATA_CACHE_INTERVAL_MS = 15000;
+  static uint32_t lastMillisOnGpsDataCache = 0;
 
   this->handleConsoleMenu();
 
   if (!this->consoleMenuActive) {
-    uint32_t delaySinceGpsDataRead =
-        this->calculateDelay(lastMillisOnGpsDataRead, loopEnterMillis);
-    bool gpsDataReadFlag =
-        (delaySinceGpsDataRead >= GPS_READOUT_INTERVAL_MS) ? true : false;
+    uint32_t millisSinceGpsDataCached =
+        this->calculateDelay(lastMillisOnGpsDataCache, loopEnterMillis);
+    bool cacheGpsData =
+        (millisSinceGpsDataCached >= GPS_DATA_CACHE_INTERVAL_MS) ? true : false;
 
-    bool newGpsDataRead = this->handleGps(gpsDataReadFlag);
-    if (newGpsDataRead) {
+    bool newGpsDataCached = this->handleGps(cacheGpsData);
+    if (newGpsDataCached) {
       this->printGpsData();
     }
 
-    if (gpsDataReadFlag) {
+    if (cacheGpsData) {
       // mark GPS data read was just requested (despite the fact if it was
       // valid to read)
-      lastMillisOnGpsDataRead = loopEnterMillis;
+      lastMillisOnGpsDataCache = loopEnterMillis;
     }
 
-    if (newGpsDataRead && this->gpsData.isValid) {
+    if (newGpsDataCached && this->gpsData.isValid) {
       // air GPS data
       preparePayload(this->gpsData, payload);
       this->led.setColor(ILed::LED_GREEN);

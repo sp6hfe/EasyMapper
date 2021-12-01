@@ -114,7 +114,7 @@ private:
 
   void printGpsData();
   void handleConsoleMenu();
-  bool handleGps(bool readData);
+  bool handleGps(bool cacheData);
 
 public:
   void setup();

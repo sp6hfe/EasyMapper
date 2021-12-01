@@ -25,13 +25,13 @@ public:
   const uint8_t getActionKey() const { return this->actionKey; };
   void makeAction() const {
     if (this->action) {
-      this->action(actionParameter);
+      this->action(this->actionParameter);
     }
   };
-  const ConsoleMenuEntryType getEntryType() const { return entryType; };
-  const bool getBoolValue() const {
+  const ConsoleMenuEntryType getEntryType() const { return this->entryType; };
+  bool getBoolValue() const {
     if (this->boolValue) {
-      return this->boolValue(boolValueParameter);
+      return this->boolValue(this->boolValueParameter);
     }
     return false;
   };

@@ -124,28 +124,30 @@ void App::loop(uint32_t loopEnterMillis) {
   this->handleConsoleMenu();
 
   if (!this->consoleMenuActive) {
-    uint32_t millisSinceGpsDataCached =
-        this->calculateDelay(lastMillisOnGpsDataCache, loopEnterMillis);
     bool cacheGpsData =
-        (millisSinceGpsDataCached >= GPS_DATA_CACHE_INTERVAL_MS) ? true : false;
+        (this->calculateDelay(lastMillisOnGpsDataCache, loopEnterMillis) >=
+         GPS_DATA_CACHE_INTERVAL_MS)
+            ? true
+            : false;
 
+    // GPS data parsed constantly when not in menu
     bool newGpsDataCached = this->handleGps(cacheGpsData);
-    if (newGpsDataCached) {
-      this->printGpsData();
-    }
 
     if (cacheGpsData) {
-      // mark GPS data read was just requested (despite the fact if it was
-      // valid to read)
-      lastMillisOnGpsDataCache = loopEnterMillis;
-    }
+      if (newGpsDataCached) {
+        this->printGpsData();
+        if (this->gpsData.isValid) {
+          // air GPS data
+          preparePayload(this->gpsData, payload);
+          this->led.setColor(ILed::LED_GREEN);
+          this->lora.send(sizeof(payload), payload, 1, false);
+          this->led.off();
+        }
+      }
 
-    if (newGpsDataCached && this->gpsData.isValid) {
-      // air GPS data
-      preparePayload(this->gpsData, payload);
-      this->led.setColor(ILed::LED_GREEN);
-      this->lora.send(sizeof(payload), payload, 1, false);
-      this->led.off();
+      // mark GPS data chache was just requested
+      // regardless if parsed data was valid
+      lastMillisOnGpsDataCache = loopEnterMillis;
     }
   }
 }

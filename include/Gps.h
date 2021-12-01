@@ -23,7 +23,7 @@ public:
   void disable() override;
   bool isEnabled() override;
 
-  Gps(IGpsPower &gpsPower_) : gpsPower(gpsPower_){};
+  Gps(IGpsPower &gpsPower_) : gpsPower(gpsPower_) { this->disable(); };
 };
 
 bool Gps::process() {

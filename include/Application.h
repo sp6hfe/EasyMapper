@@ -40,12 +40,36 @@ public:
     return false;
   };
 
+  static void toggleLedEnableWrapper(void *appClass) {
+    if (appClass) {
+      App *thisApp = reinterpret_cast<App *>(appClass);
+      if (thisApp->led.isEnabled()) {
+        thisApp->led.disable();
+      } else {
+        thisApp->led.enable();
+      }
+      thisApp->loadPeripheralsMenu();
+    }
+  };
+
   static bool isGpsEnabledWrapper(void *appClass) {
     if (appClass) {
       App *thisApp = reinterpret_cast<App *>(appClass);
       return thisApp->gps.isEnabled();
     }
     return false;
+  };
+
+  static void toggleGpsEnableWrapper(void *appClass) {
+    if (appClass) {
+      App *thisApp = reinterpret_cast<App *>(appClass);
+      if (thisApp->gps.isEnabled()) {
+        thisApp->gps.disable();
+      } else {
+        thisApp->gps.enable();
+      }
+      thisApp->loadPeripheralsMenu();
+    }
   };
 
 private:
@@ -71,10 +95,12 @@ private:
   const uint8_t mainMenuSize = CONSOLE_MENU_SIZE(mainMenu);
 
   const ConsoleMenuEntry peripheralsMenu[3] = {
-      {"  1 LED", '1', nullptr, nullptr, ConsoleMenuEntryType::BOOLEAN,
-       isLedEnabledWrapper, reinterpret_cast<void *>(this)},
-      {"  2 GPS", '2', nullptr, nullptr, ConsoleMenuEntryType::BOOLEAN,
-       isGpsEnabledWrapper, reinterpret_cast<void *>(this)},
+      {"  1 LED", '1', toggleLedEnableWrapper, reinterpret_cast<void *>(this),
+       ConsoleMenuEntryType::BOOLEAN, isLedEnabledWrapper,
+       reinterpret_cast<void *>(this)},
+      {"  2 GPS", '2', toggleGpsEnableWrapper, reinterpret_cast<void *>(this),
+       ConsoleMenuEntryType::BOOLEAN, isGpsEnabledWrapper,
+       reinterpret_cast<void *>(this)},
       {"ESC Main menu", ConsoleMenu::ESC_KEY_CODE, loadMainMenuWrapper,
        reinterpret_cast<void *>(this), ConsoleMenuEntryType::SUBMENU, nullptr,
        nullptr}};

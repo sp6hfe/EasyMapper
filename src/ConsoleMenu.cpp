@@ -111,6 +111,8 @@ bool ConsoleMenu::processInput(uint8_t dataIn) {
     if (dataIn == this->menuEntries[index].getActionKey()) {
       switch (this->menuEntries[index].getEntryType()) {
       case ConsoleMenuEntryType::SUBMENU:
+      /* fallthrough */
+      case ConsoleMenuEntryType::BOOLEAN:
         this->menuEntries[index].makeAction();
         break;
       case ConsoleMenuEntryType::EXIT:

@@ -21,7 +21,9 @@ private:
 public:
   void begin(uint8_t extPowerPin_) {
     this->extPowerPin = extPowerPin_;
-    pinMode(this->extPowerPin, OUTPUT);
+    if (this->extPowerPin != EXT_POWER_PIN_NOT_SET) {
+      pinMode(this->extPowerPin, OUTPUT);
+    }
     this->setExtPower(ALL_POWER_MASK, false);
   };
 
@@ -46,10 +48,10 @@ void ExtPower::setExtPower(uint8_t powerMask, bool enabled) {
   // LED and GPS share the same external power rail
   if (this->extPowerPin != EXT_POWER_PIN_NOT_SET) {
     if (this->peripheralsPowered) {
-      digitalWrite(extPowerPin, LOW);
+      digitalWrite(this->extPowerPin, LOW);
       delay(1);
     } else {
-      digitalWrite(extPowerPin, HIGH);
+      digitalWrite(this->extPowerPin, HIGH);
     }
   }
 }

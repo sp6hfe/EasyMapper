@@ -49,7 +49,7 @@ void ExtPower::setExtPower(uint8_t powerMask, bool enabled) {
   if (this->extPowerPin != EXT_POWER_PIN_NOT_SET) {
     if (this->peripheralsPowered) {
       digitalWrite(this->extPowerPin, LOW);
-      delay(1);
+      delay(10);
     } else {
       digitalWrite(this->extPowerPin, HIGH);
     }

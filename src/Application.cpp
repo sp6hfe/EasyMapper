@@ -43,7 +43,7 @@ uint32_t App::calculateDelay(const uint32_t lastMillis,
 }
 
 void App::printGpsData() {
-  this->console.printf("%02d.%02d.%d %02d:%02d:%02d ", this->gpsData.time.day,
+  this->console.printf("%02d.%02d.%04d %02d:%02d:%02d ", this->gpsData.time.day,
                        this->gpsData.time.month, this->gpsData.time.year,
                        this->gpsData.time.hour, this->gpsData.time.minute,
                        this->gpsData.time.second);
@@ -63,6 +63,8 @@ void App::printGpsData() {
                               1);
   this->console.print(", HDOP: ");
   utils::Numeric::printDouble(this->console, this->gpsData.coordinates.hdop, 1);
+  this->console.print(", Sats: ");
+  this->console.printf("%02d", this->gpsData.reception.satellites);
   this->console.println();
 }
 

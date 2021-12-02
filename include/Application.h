@@ -113,12 +113,14 @@ private:
                                  const uint32_t currentMillis);
 
   void printGpsData();
+  void markGpsDataAsProcessed();
+  bool isGpsDataUpdated();
   void handleConsoleMenu();
-  bool handleGps(bool cacheData);
+  bool handleGps(const uint32_t currentMillis, const bool acquireData);
 
 public:
   void setup();
-  void loop(uint32_t loopEnterMillis);
+  void loop(const uint32_t loopEnterMillis);
 
   App(Stream &console_, ILoRaWan &lora_, IGps &gps_, ILed &led_)
       : console(console_), lora(lora_), gps(gps_), led(led_){};

@@ -47,7 +47,7 @@ void App::printGpsData() {
                        this->gpsData.time.month, this->gpsData.time.year,
                        this->gpsData.time.hour, this->gpsData.time.minute,
                        this->gpsData.time.second);
-  if (this->gpsData.isValid) {
+  if (this->isGpsDataUpdated()) {
     this->console.print("[+]");
   } else {
     this->console.print("[-]");
@@ -66,6 +66,17 @@ void App::printGpsData() {
   this->console.println();
 }
 
+void App::markGpsDataAsProcessed() {
+  this->gpsData.coordinates.updated = false;
+  this->gpsData.time.updated = false;
+  this->gpsData.reception.updated = false;
+}
+
+bool App::isGpsDataUpdated() {
+  return (this->gpsData.coordinates.updated || this->gpsData.time.updated ||
+          this->gpsData.reception.updated);
+}
+
 void App::handleConsoleMenu() {
   int consoleDataIn = this->console.read();
 
@@ -79,15 +90,15 @@ void App::handleConsoleMenu() {
   }
 }
 
-bool App::handleGps(bool cacheData) {
-  bool ifNewGpsDataCached = false;
+bool App::handleGps(const uint32_t currentMillis, const bool acquireData) {
+  bool ifNewGpsDataAcquired = false;
 
-  if (this->gps.process() && this->gps.isDataUpdated() && cacheData) {
-    this->gps.getData(this->gpsData);
-    ifNewGpsDataCached = true;
+  if (this->gps.process() && acquireData &&
+      this->gps.getData(currentMillis, this->gpsData)) {
+    ifNewGpsDataAcquired = true;
   }
 
-  return ifNewGpsDataCached;
+  return ifNewGpsDataAcquired;
 }
 
 void App::loadMainMenu() {
@@ -117,33 +128,32 @@ void App::setup() {
   }
 }
 
-void App::loop(uint32_t loopEnterMillis) {
+void App::loop(const uint32_t loopEnterMillis) {
   static constexpr uint32_t GPS_DATA_CACHE_INTERVAL_MS = 15000;
   static uint32_t lastMillisOnGpsDataCache = 0;
 
   this->handleConsoleMenu();
 
   if (!this->consoleMenuActive) {
-    bool cacheGpsData =
+    bool acquireGpsData =
         (this->calculateDelay(lastMillisOnGpsDataCache, loopEnterMillis) >=
          GPS_DATA_CACHE_INTERVAL_MS)
             ? true
             : false;
 
     // GPS data parsed constantly when not in menu
-    bool newGpsDataCached = this->handleGps(cacheGpsData);
+    bool newGpsDataAcquired = this->handleGps(loopEnterMillis, acquireGpsData);
 
-    if (cacheGpsData) {
-      if (newGpsDataCached) {
-        this->printGpsData();
-        if (this->gpsData.isValid) {
-          // air GPS data
-          preparePayload(this->gpsData, payload);
-          this->led.setColor(ILed::LED_GREEN);
-          this->lora.send(sizeof(payload), payload, 1, false);
-          this->led.off();
-        }
+    if (acquireGpsData) {
+      this->printGpsData();
+      if (newGpsDataAcquired) {
+        // air GPS data
+        preparePayload(this->gpsData, payload);
+        this->led.setColor(ILed::LED_GREEN);
+        this->lora.send(sizeof(payload), payload, 1, false);
+        this->led.off();
       }
+      this->markGpsDataAsProcessed();
 
       // mark GPS data chache was just requested
       // regardless if parsed data was valid

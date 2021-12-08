@@ -24,15 +24,14 @@ void loop() {
   wrappers::HwSerial console;
   console.begin(&Serial);
 
-  pwr::ExtPower extPower;
-  extPower.begin(VEXT_PIN);
+  pwr::ExtPower extPower(VEXT_PIN);
+
   wrappers::Led led(extPower);
 
   wrappers::SwSerial gpsLink(GPS_TX_PIN, GPS_RX_PIN);
   gpsLink.begin(GPS_BAUDRATE);
 
-  wrappers::Gps gps(extPower);
-  gps.begin(&gpsLink);
+  wrappers::Gps gps(gpsLink, extPower);
 
   wrappers::LoRaWan lora(DeviceClass_t::CLASS_A,
                          LoRaMacRegion_t::LORAMAC_REGION_EU868);

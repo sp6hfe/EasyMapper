@@ -8,29 +8,32 @@
 namespace wrappers {
 class Gps : public IGps {
 private:
-  SwSerial *gpsLink;
   TinyGPSPlus gps;
   bool enabled = false;
+  SwSerial &gpsLink;
   IGpsPower &gpsPower;
 
 public:
-  void begin(SwSerial *gpsLink_) { gpsLink = gpsLink_; };
   bool process() override;
   bool getData(const uint32_t readoutMillis, gpsData_t &data) override;
   void enable() override;
   void disable() override;
   bool isEnabled() override;
 
-  Gps(IGpsPower &gpsPower_) : gpsPower(gpsPower_) { this->disable(); };
+  Gps(SwSerial &gpsLink_, IGpsPower &gpsPower_)
+      : gpsLink(gpsLink_), gpsPower(gpsPower_) {
+    this->disable();
+  };
 };
 
 bool Gps::process() {
-  if (this->gpsLink && this->enabled) {
-    int gpsData = this->gpsLink->read();
+  if (this->enabled) {
+    int gpsData = this->gpsLink.read();
     if (gpsData >= 0) {
       return this->gps.encode(static_cast<uint8_t>(gpsData));
     }
   }
+
   return false;
 }
 
@@ -76,13 +79,13 @@ bool Gps::getData(const uint32_t readoutMillis, gpsData_t &data) {
 void Gps::enable() {
   this->gpsPower.gpsPowerOn();
   // serial link re-opening here as GPS pins garbage might cause interrupts
-  this->gpsLink->reOpen();
+  this->gpsLink.reOpen();
   this->enabled = true;
 }
 
 void Gps::disable() {
   // serial link to be closed due to interrupts
-  this->gpsLink->close();
+  this->gpsLink.close();
   this->gpsPower.gpsPowerOff();
   this->enabled = false;
 }

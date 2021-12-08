@@ -7,7 +7,6 @@
 #include "SwSerial.h"
 #include <Arduino.h>
 #include <CubeCell_NeoPixel.h>
-#include <softSerial.h>
 
 static constexpr uint8_t VEXT_PIN = GPIO6;
 static constexpr uint8_t GPS_RX_PIN = GPIO0;
@@ -29,11 +28,8 @@ void loop() {
   extPower.begin(VEXT_PIN);
   wrappers::Led led(extPower);
 
-  softSerial softwareSerial(GPS_TX_PIN, GPS_RX_PIN);
-  softwareSerial.begin(GPS_BAUDRATE);
-
-  wrappers::SwSerial gpsLink;
-  gpsLink.begin(&softwareSerial);
+  wrappers::SwSerial gpsLink(GPS_TX_PIN, GPS_RX_PIN);
+  gpsLink.begin(GPS_BAUDRATE);
 
   wrappers::Gps gps(extPower);
   gps.begin(&gpsLink);

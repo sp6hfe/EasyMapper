@@ -2,19 +2,19 @@
 
 #include "IGps.h"
 #include "IGpsPower.h"
-#include <Stream.h>
+#include "SwSerial.h"
 #include <TinyGPS++.h>
 
 namespace wrappers {
 class Gps : public IGps {
 private:
-  Stream *gpsLink;
+  SwSerial *gpsLink;
   TinyGPSPlus gps;
   bool enabled = false;
   IGpsPower &gpsPower;
 
 public:
-  void begin(Stream *gpsLink_) { gpsLink = gpsLink_; };
+  void begin(SwSerial *gpsLink_) { gpsLink = gpsLink_; };
   bool process() override;
   bool getData(const uint32_t readoutMillis, gpsData_t &data) override;
   void enable() override;
@@ -75,10 +75,14 @@ bool Gps::getData(const uint32_t readoutMillis, gpsData_t &data) {
 
 void Gps::enable() {
   this->gpsPower.gpsPowerOn();
+  // serial link re-opening here as GPS pins garbage might cause interrupts
+  this->gpsLink->reOpen();
   this->enabled = true;
 }
 
 void Gps::disable() {
+  // serial link to be closed due to interrupts
+  this->gpsLink->close();
   this->gpsPower.gpsPowerOff();
   this->enabled = false;
 }

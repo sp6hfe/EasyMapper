@@ -57,10 +57,14 @@ void SwSerial::reOpen() {
 }
 
 void SwSerial::begin(uint16_t baudrate) {
-  // behavior depends on how begin() deals with UNUSED_PINs provided
-  swSerial.begin(baudrate);
   this->baudrate = baudrate;
-  this->notClosed = true;
+  if (this->baudrate) {
+    // behavior depends on how begin() deals with UNUSED_PINs provided
+    swSerial.begin(baudrate);
+    this->notClosed = true;
+  } else {
+    this->close();
+  }
 }
 
 int SwSerial::available() {

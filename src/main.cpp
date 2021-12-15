@@ -7,7 +7,6 @@
 #include "SwSerial.h"
 #include <Arduino.h>
 #include <CubeCell_NeoPixel.h>
-#include <softSerial.h>
 
 static constexpr uint8_t VEXT_PIN = GPIO6;
 static constexpr uint8_t GPS_RX_PIN = GPIO0;
@@ -25,18 +24,14 @@ void loop() {
   wrappers::HwSerial console;
   console.begin(&Serial);
 
-  pwr::ExtPower extPower;
-  extPower.begin(VEXT_PIN);
+  pwr::ExtPower extPower(VEXT_PIN);
+
   wrappers::Led led(extPower);
 
-  softSerial softwareSerial(GPS_TX_PIN, GPS_RX_PIN);
-  softwareSerial.begin(GPS_BAUDRATE);
+  wrappers::SwSerial gpsLink(GPS_TX_PIN, GPS_RX_PIN);
+  gpsLink.begin(GPS_BAUDRATE);
 
-  wrappers::SwSerial gpsLink;
-  gpsLink.begin(&softwareSerial);
-
-  wrappers::Gps gps(extPower);
-  gps.begin(&gpsLink);
+  wrappers::Gps gps(gpsLink, extPower);
 
   wrappers::LoRaWan lora(DeviceClass_t::CLASS_A,
                          LoRaMacRegion_t::LORAMAC_REGION_EU868);
@@ -44,7 +39,7 @@ void loop() {
   app::App application(console, lora, gps, led);
   application.setup();
 
-  while (1) {
+  for (;;) {
     application.loop(millis());
   }
 }

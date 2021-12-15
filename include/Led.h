@@ -24,11 +24,7 @@ public:
   void disable() override;
   bool isEnabled() override;
 
-  Led(ILedPower &ledPower_) : ledPower(ledPower_) {
-    this->led.begin();
-    this->led.clear();
-    this->led.setBrightness(10);
-  }
+  Led(ILedPower &ledPower_) : ledPower(ledPower_) { this->disable(); }
 };
 
 void Led::on() {
@@ -58,6 +54,9 @@ void Led::setBrightness(const uint8_t level) { this->led.setBrightness(level); }
 
 void Led::enable() {
   this->ledPower.ledPowerOn();
+  this->led.begin();
+  this->led.clear();
+  this->led.setBrightness(10);
   this->setColor(LED_OFF);
   this->enabled = true;
 }

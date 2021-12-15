@@ -12,6 +12,8 @@ public:
     uint8_t hour;
     uint8_t minute;
     uint8_t second;
+    bool updated;
+    uint32_t updateMillis;
   };
 
   struct gpsCoordinates_t {
@@ -19,15 +21,22 @@ public:
     double longtitude;
     double altitude;
     double hdop;
+    bool updated;
+    uint32_t updateMillis;
+  };
+
+  struct gpsReception_t {
+    uint8_t satellites;
+    bool updated;
+    uint32_t updateMillis;
   };
 
   struct gpsData_t {
     gpsCoordinates_t coordinates;
     gpsTime_t time;
+    gpsReception_t reception;
   };
 
   virtual bool process() = 0;
-  virtual bool isDataUpdated() = 0;
-  virtual bool isDataValid() = 0;
-  virtual void getData(gpsData_t &data) = 0;
+  virtual bool getData(const uint32_t readoutMillis, gpsData_t &data) = 0;
 };

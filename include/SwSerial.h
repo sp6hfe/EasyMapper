@@ -7,11 +7,22 @@
 namespace wrappers {
 
 class SwSerial : public Stream {
+public:
+  static constexpr uint8_t UNUSED_PIN = 0xFF;
+
 private:
-  softSerial *serial;
+  bool notClosed = false;
+  uint8_t txPin;
+  uint8_t rxPin;
+  uint16_t baudrate = 0;
+  softSerial swSerial;
 
 public:
-  void begin(softSerial *serial_) { serial = serial_; };
+  // Ext device power-off interrupt triggering issue solving
+  void close();
+  void reOpen();
+  // Init
+  void begin(uint16_t baudrate);
   // Stream
   int available() override;
   int read() override;
@@ -20,40 +31,66 @@ public:
   // Print
   size_t write(uint8_t c) override;
 
-  SwSerial(){};
+  SwSerial(uint8_t txPin_, uint8_t rxPin_)
+      : txPin(txPin_), rxPin(rxPin_), swSerial(txPin, rxPin){};
 };
 
-int SwSerial::available() {
-  if (this->serial) {
-    return this->serial->available();
+void SwSerial::close() {
+  if (this->rxPin != UNUSED_PIN) {
+    detachInterrupt(this->rxPin);
+    pinMode(this->rxPin, OUTPUT);
+    digitalWrite(this->rxPin, HIGH);
   }
+
+  if (this->txPin != UNUSED_PIN) {
+    pinMode(this->txPin, OUTPUT);
+    digitalWrite(this->txPin, HIGH);
+  }
+
+  this->notClosed = false;
+}
+
+void SwSerial::reOpen() {
+  if (this->baudrate) {
+    this->begin(this->baudrate);
+  }
+}
+
+void SwSerial::begin(uint16_t baudrate) {
+  this->baudrate = baudrate;
+  if (this->baudrate) {
+    // behavior depends on how begin() deals with UNUSED_PINs provided
+    swSerial.begin(baudrate);
+    this->notClosed = true;
+  } else {
+    this->close();
+  }
+}
+
+int SwSerial::available() {
+  if (this->notClosed && (this->rxPin != UNUSED_PIN)) {
+    return this->swSerial.available();
+  }
+
   return 0;
 }
 
 int SwSerial::read() {
-  if (this->serial) {
-    return this->serial->read();
+  if (this->notClosed && (this->rxPin != UNUSED_PIN)) {
+    return this->swSerial.read();
   }
-  return (uint32)(-1);
+  return (-1);
 }
 
-int SwSerial::peek() {
-  if (this->serial) {
-    return this->serial->peek();
-  }
-  return 0;
-}
+int SwSerial::peek() { return this->swSerial.peek(); }
 
-void SwSerial::flush() {
-  if (this->serial) {
-    this->serial->flush();
-  }
-}
+void SwSerial::flush() { this->swSerial.flush(); }
 
 size_t SwSerial::write(uint8_t c) {
-  if (this->serial) {
-    return this->serial->write(c);
+  if (this->notClosed && (this->txPin != UNUSED_PIN)) {
+    return this->swSerial.write(c);
   }
+
   return 1;
 }
 
